@@ -1,10 +1,14 @@
 import { MongoClient } from 'mongodb'
 import bcrypt from 'bcryptjs'
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://shaktimaan0210_db_user:XU091M27rXvF3zuZ@userauth.op8fp5r.mongodb.net/gravity-seo?retryWrites=true&w=majority'
+const MONGODB_URI = process.env.MONGODB_URI
+if (!MONGODB_URI) {
+  console.error('Error: MONGODB_URI environment variable is not set.')
+  process.exit(1)
+}
 
 async function seedUser() {
-  const client = new MongoClient(MONGODB_URI)
+  const client = new MongoClient(MONGODB_URI!)
 
   try {
     await client.connect()

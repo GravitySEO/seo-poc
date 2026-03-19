@@ -1,31 +1,27 @@
 import { MongoClient, Db } from 'mongodb'
 
-const MONGODB_URI = process.env.MONGODB_URI!
-
-if (!MONGODB_URI) {
-  throw new Error('Please define the MONGODB_URI environment variable')
-}
-
-let client: MongoClient
-let clientPromise: Promise<MongoClient>
-
 declare global {
   var _mongoClientPromise: Promise<MongoClient> | undefined
 }
 
-if (process.env.NODE_ENV === 'development') {
-  if (!global._mongoClientPromise) {
-    client = new MongoClient(MONGODB_URI)
-    global._mongoClientPromise = client.connect()
+function getClientPromise(): Promise<MongoClient> {
+  const MONGODB_URI = process.env.MONGODB_URI
+  if (!MONGODB_URI) {
+    throw new Error('Please define the MONGODB_URI environment variable')
   }
-  clientPromise = global._mongoClientPromise
-} else {
-  client = new MongoClient(MONGODB_URI)
-  clientPromise = client.connect()
+
+  if (process.env.NODE_ENV === 'development') {
+    if (!global._mongoClientPromise) {
+      global._mongoClientPromise = new MongoClient(MONGODB_URI).connect()
+    }
+    return global._mongoClientPromise
+  }
+
+  return new MongoClient(MONGODB_URI).connect()
 }
 
 export async function getDb(): Promise<Db> {
-  const client = await clientPromise
+  const client = await getClientPromise()
   return client.db('gravity-seo')
 }
 
@@ -34,4 +30,4 @@ export async function getCollection(name: string) {
   return db.collection(name)
 }
 
-export default clientPromise
+export default { getDb, getCollection }
